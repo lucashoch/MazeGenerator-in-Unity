@@ -2,15 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-internal class Parede
-{
+internal class Parede {
     public int direcao { get; }//0: cima, 1: direita, 2: baixo, 3: esquerda
     public GameObject gameObject;
-    Celula pai { get; }
-    Celula vizinho;
+    public Celula pai;
+    public Celula vizinho;
 
-    public Parede(GameObject g, Celula p, Celula v = null)
-    {
+    public Parede(GameObject g, Celula p, Celula v = null) {
         gameObject = g;
         pai = p;
 

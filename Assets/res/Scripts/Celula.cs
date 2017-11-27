@@ -25,8 +25,6 @@ internal class Celula {
             Parede p = new Parede(child.gameObject, this);
             paredes.Add(p);
         }
-        this.pai = pai;
-        this.filhos = filhos;
     }
 
     public void addVizinho(Celula vizinho) {
@@ -35,9 +33,38 @@ internal class Celula {
         vizinhos.Add(vizinho);
         vizinho.vizinhos.Add(this);
 
+        int direcao = getDirecaoVizinho(vizinho);  //0: cima, 1: direita, 2: baixo, 3: esquerda
+        // entretanto, o padrão é que se adicione vizinho apenas acima e à esquerda. Ou seja, só vai retornar 0 ou 3
 
-        if (vizinhos.Count > 4)
-            System.Console.WriteLine("Deu ruim aqui, tio");
+        foreach (Parede p in paredes) {
+            if (direcao == p.direcao) {
+                p.vizinho = vizinho;
+                foreach (Parede p2 in vizinho.paredes) {
+                    if (Mathf.Abs(direcao - 2) == p2.direcao) {
+                        p2.vizinho = this;
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    public int getDirecaoVizinho(Celula v) { //0: cima, 1: direita, 2: baixo, 3: esquerda
+        int direcao = id - v.id;
+
+        switch (direcao) {
+            case 1: //o vizinho está à esquerda
+                return 3;
+            case -1: //o vizinho está à direita
+                return 1;
+            default:
+                if (direcao > 0) {//o vizinho está acima
+                    return 0;
+                } else {//o vizinho está abaixo
+                    return 2;
+                }
+        }
+
     }
 
     public List<Celula> getVizinhosVisitados() {
@@ -58,7 +85,6 @@ internal class Celula {
         return ret;
     }
     public bool TemVizinhosNaoVisitados() {
-        List<Celula> ret = new List<Celula>();
         foreach (Celula v in vizinhos) {
             if (!v.visitada)
                 return true;
@@ -87,8 +113,6 @@ internal class Celula {
                     retiraPareceCima(celFilho, this);
                     break;
                 }
-
-
         }
     }
 
@@ -96,11 +120,11 @@ internal class Celula {
         Parede esquerda = null;
         Parede direita = null;
 
-        foreach(Parede p in celCentral.paredes) {
+        foreach (Parede p in celCentral.paredes) {
             if (p.direcao == 3) {
                 esquerda = p;
                 break;
-            }                
+            }
         }
         foreach (Parede p in celEsquerda.paredes) {
             if (p.direcao == 1) {

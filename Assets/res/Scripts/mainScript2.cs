@@ -137,6 +137,11 @@ public class mainScript2 : MonoBehaviour {
         btnGera.interactable = true;
         yield return null;
         raiz = matriz[0];
+        print(raiz.paredes.Count);
+        foreach(Parede p in matriz[21].paredes) {
+            if(p.vizinho != null)
+                print("direcao: " + p.direcao + ", id pai: " + p.pai.id + ", id vizinho: " + p.vizinho.id);
+        }
         matriz = null;
     }
 
@@ -173,8 +178,11 @@ public class mainScript2 : MonoBehaviour {
         c.gameObject.GetComponent<MeshRenderer>().material.color = Color.red;
     }
 
-    /*
-     *  Make the initial cell the current cell and mark it as visited
+    
+    IEnumerator GeraBuscaEmProfundidade() {
+
+        /*
+        Make the initial cell the current cell and mark it as visited
         While there are unvisited cells
             If the current cell has any neighbours which have not been visited
                 Choose randomly one of the unvisited neighbours
@@ -184,8 +192,8 @@ public class mainScript2 : MonoBehaviour {
             Else if stack is not empty
                 Pop a cell from the stack
                 Make it the current cell
-     */
-    IEnumerator GeraBuscaEmProfundidade() {
+        */
+
         btnPausa.interactable = true;
         btnLimpa.interactable = false;
 
@@ -199,22 +207,22 @@ public class mainScript2 : MonoBehaviour {
         while (atual.pai != null || atual.TemVizinhosNaoVisitados()) {
 
             if (atual.TemVizinhosNaoVisitados()) {
-                
+
                 List<Celula> naoVisitados = atual.getVizinhosNaoVisitados();
                 Celula vizinhoAleatorio = naoVisitados[r.Next(naoVisitados.Count)];
 
                 vizinhoAleatorio.pai = atual;
                 atual.filhos.Add(vizinhoAleatorio);
                 atual.removeParedesEntre(vizinhoAleatorio);
-                setAtualDesce(ref atual, vizinhoAleatorio);
+                setAtualDesce(ref atual, vizinhoAleatorio); // desce na construção da árvore. A única diferença com Sobe é a cor que pinta
 
 
             } else if (atual.pai != null) {
-                setAtualSobe(ref atual, atual.pai);
+                setAtualSobe(ref atual, atual.pai); //sempre que sobe na árvore, pinta o antigo de Branco, e ele nunca mais é visitado
             }
 
-            //if (c % 4 == 0)
-               // yield return null;
+            
+            yield return new WaitForSeconds(velocidade);
 
             c++;
         }

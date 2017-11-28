@@ -137,11 +137,6 @@ public class mainScript2 : MonoBehaviour {
         btnGera.interactable = true;
         yield return null;
         raiz = matriz[0];
-        print(raiz.paredes.Count);
-        foreach(Parede p in matriz[21].paredes) {
-            if(p.vizinho != null)
-                print("direcao: " + p.direcao + ", id pai: " + p.pai.id + ", id vizinho: " + p.vizinho.id);
-        }
         matriz = null;
     }
 
@@ -165,7 +160,6 @@ public class mainScript2 : MonoBehaviour {
 
     void setAtualSobe(ref Celula atual, Celula antiga) {
         Transform c = atual.gameObject.transform.GetChild(1);
-        //c.gameObject.GetComponent<MeshRenderer>().material.color = new Color(255, 255, 255);
         c.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
 
 
@@ -228,6 +222,8 @@ public class mainScript2 : MonoBehaviour {
         }
 
 
+        Transform fundo = atual.gameObject.transform.GetChild(1);
+        fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
 
 
         btnPausa.interactable = false;

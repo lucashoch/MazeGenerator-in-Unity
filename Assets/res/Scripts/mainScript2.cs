@@ -14,6 +14,7 @@ public class mainScript2 : MonoBehaviour {
     private static int comprimento;
 
     float velocidade = 0f;
+    bool instantaneo = false;
 
     Button btnGera;
     Button btnPausa;
@@ -43,15 +44,40 @@ public class mainScript2 : MonoBehaviour {
     public int getAltura() {
         return altura;
     }
+    public void setInstantaneo(bool v) {
+        instantaneo = v;
+    }
     public int getComprimento() {
         return comprimento;
     }
-    public void IniciaGeraBuscaEmProfundidade() {
-        StartCoroutine("GeraBuscaEmProfundidade");
+    public void IniciaGeraMaze(int t) {
+        switch (t) {
+            case 0:
+                StartCoroutine("GeraBuscaEmProfundidade");
+                break;
+            case 1:
+                StartCoroutine("GeraPorPrim");
+                break;
+            default:
+                break;
+        }
+        
     }
-    public void PausaGeraBuscaEmProfundidade() {
-        StopCoroutine("GeraBuscaEmProfundidade");
+
+    public void PausaGeraMaze(int t) {
+        switch (t) {
+            case 0:
+                StopCoroutine("GeraBuscaEmProfundidade");
+                break;
+            case 1:
+                StopCoroutine("GeraPorPrim");
+                break;
+            default:
+                break;
+        }
+
     }
+
     public void Limpa() {
         StopCoroutine("DesenhaGrid");
         StartCoroutine("DesenhaGrid");
@@ -143,9 +169,8 @@ public class mainScript2 : MonoBehaviour {
 
 
 
-    void setAtualDesce(ref Celula atual, Celula antiga) {
+    void setAtualDesceDFS(ref Celula atual, Celula antiga) {
         Transform c = atual.gameObject.transform.GetChild(1);
-        //c.gameObject.GetComponent<MeshRenderer>().material.color = new Color(0f, 255f, 130f, 15f);
         c.gameObject.GetComponent<MeshRenderer>().material.color = Color.cyan;
 
 
@@ -158,7 +183,7 @@ public class mainScript2 : MonoBehaviour {
         c.gameObject.GetComponent<MeshRenderer>().material.color = Color.red;
     }
 
-    void setAtualSobe(ref Celula atual, Celula antiga) {
+    void setAtualSobeDFS(ref Celula atual, Celula antiga) {
         Transform c = atual.gameObject.transform.GetChild(1);
         c.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
 
@@ -172,7 +197,7 @@ public class mainScript2 : MonoBehaviour {
         c.gameObject.GetComponent<MeshRenderer>().material.color = Color.red;
     }
 
-    
+
     IEnumerator GeraBuscaEmProfundidade() {
 
         /*
@@ -197,7 +222,7 @@ public class mainScript2 : MonoBehaviour {
         int c = 0;
         System.Random r = new System.Random();
 
-        setAtualDesce(ref atual, raiz);
+        setAtualDesceDFS(ref atual, raiz);
         while (atual.pai != null || atual.TemVizinhosNaoVisitados()) {
 
             if (atual.TemVizinhosNaoVisitados()) {
@@ -208,15 +233,15 @@ public class mainScript2 : MonoBehaviour {
                 vizinhoAleatorio.pai = atual;
                 atual.filhos.Add(vizinhoAleatorio);
                 atual.removeParedesEntre(vizinhoAleatorio);
-                setAtualDesce(ref atual, vizinhoAleatorio); // desce na construção da árvore. A única diferença com Sobe é a cor que pinta
+                setAtualDesceDFS(ref atual, vizinhoAleatorio); // desce na construção da árvore. A única diferença com Sobe é a cor que pinta
 
 
             } else if (atual.pai != null) {
-                setAtualSobe(ref atual, atual.pai); //sempre que sobe na árvore, pinta o antigo de Branco, e ele nunca mais é visitado
+                setAtualSobeDFS(ref atual, atual.pai); //sempre que sobe na árvore, pinta o antigo de Branco, e ele nunca mais é visitado
             }
 
-            
-            yield return new WaitForSeconds(velocidade);
+            if (!instantaneo)
+                yield return new WaitForSeconds(velocidade);
 
             c++;
         }
@@ -230,4 +255,169 @@ public class mainScript2 : MonoBehaviour {
         btnLimpa.interactable = true;
         yield return null;
     }
+
+
+    List<Parede> setAtualPrim(ref Celula atual, Celula antiga) {
+        Transform c = atual.gameObject.transform.GetChild(1);
+        c.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
+
+
+        atual = antiga;
+
+        atual.visitada = true;
+
+
+        c = atual.gameObject.transform.GetChild(1);
+        c.gameObject.GetComponent<MeshRenderer>().material.color = Color.red;
+
+        List<Parede> ret = new List<Parede>();
+        foreach (Parede p in atual.paredes) {
+            if (p.vizinho != null)
+                ret.Add(p);
+        }
+        return ret;
+
+    }
+
+    List<Celula> setAtualPrim2(ref Celula atual, Celula antiga) {
+        Transform c = atual.gameObject.transform.GetChild(1);
+        c.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
+
+
+        atual = antiga;
+
+        atual.visitada = true;
+
+
+        c = atual.gameObject.transform.GetChild(1);
+        c.gameObject.GetComponent<MeshRenderer>().material.color = Color.red;
+
+        return atual.vizinhos;
+
+    }
+    /*
+    IEnumerator GeraPorPrim() {
+        /*
+            Start with a grid full of walls.
+            Pick a cell, mark it as part of the maze. Add the walls of the cell to the wall list.
+            While there are walls in the list:
+                Pick a random wall from the list. If only one of the two cells that the wall divides is visited, then:
+                    Make the wall a passage and mark the unvisited cell as part of the maze.
+                    Add the neighboring walls of the cell to the wall list.
+                Remove the wall from the list.
+         */
+    /*
+
+   List<Parede> paredesNaoVisitadas = new List<Parede>();
+   Celula atual = raiz;
+
+   paredesNaoVisitadas.AddRange(setAtualPrim(ref atual, raiz));
+
+   System.Random r = new System.Random();
+   int c = 0;
+   //while (c < 200) {
+   while (paredesNaoVisitadas.Count > 0) {
+       Parede paredeAleatoria = paredesNaoVisitadas[r.Next(paredesNaoVisitadas.Count)];
+       bool condicao;
+       condicao = paredeAleatoria.pai.visitada && !paredeAleatoria.vizinho.visitada;
+       condicao |= !paredeAleatoria.pai.visitada && paredeAleatoria.vizinho.visitada;
+       if (condicao) {
+
+           Celula visitado;
+           Celula naoVisitado;
+           if (paredeAleatoria.pai.visitada) {
+               visitado = paredeAleatoria.pai;
+               naoVisitado = paredeAleatoria.vizinho;
+           } else {
+               visitado = paredeAleatoria.vizinho;
+               naoVisitado = paredeAleatoria.pai;
+               print("FOI O VIZINHO COM O CASTIÇAL");
+           }
+
+           setAtualPrim(ref atual, visitado);
+           atual.removeParedesEntre(naoVisitado);                
+
+           foreach(Parede candidata in setAtualPrim(ref atual, naoVisitado)) {
+               if (!paredesNaoVisitadas.Contains(candidata)) {
+                   paredesNaoVisitadas.Add(candidata);
+               }
+           }
+           if (!instantaneo)
+               yield return new WaitForSeconds(velocidade);
+       }
+       paredesNaoVisitadas.Remove(paredeAleatoria);
+       c++;
+
+   }
+   Transform fundo = atual.gameObject.transform.GetChild(1);
+   fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
+
+
+   btnPausa.interactable = false;
+   btnLimpa.interactable = true;
+   yield return null;
 }
+*/
+    IEnumerator GeraPorPrim() {
+        /*
+            Start with a grid full of walls.
+            Pick a cell, mark it as part of the maze. Add the walls of the cell to the wall list.
+            While there are walls in the list:
+                Pick a random wall from the list. If only one of the two cells that the wall divides is visited, then:
+                    Make the wall a passage and mark the unvisited cell as part of the maze.
+                    Add the neighboring walls of the cell to the wall list.
+                Remove the wall from the list.
+         */
+
+        btnPausa.interactable = true;
+        btnLimpa.interactable = false;
+
+        List<Celula> vizinhosNaoVisitados = new List<Celula>();
+        Celula atual = raiz;
+
+        vizinhosNaoVisitados.AddRange(setAtualPrim2(ref atual, raiz));
+
+        System.Random r = new System.Random();
+        int c = 0;
+        //while (c < 50) {
+        while (vizinhosNaoVisitados.Count > 0) {
+            Celula vizinhoAleatorio = vizinhosNaoVisitados[r.Next(vizinhosNaoVisitados.Count)];
+
+
+            List<Celula> visitados = new List<Celula>();
+            foreach (Celula v in vizinhoAleatorio.vizinhos) {
+                if (v.visitada)
+                    visitados.Add(v);
+            }
+
+
+            if (visitados.Count > 0 && !vizinhoAleatorio.visitada) {
+
+                Celula paiAleatorio = visitados[r.Next(visitados.Count)];
+
+                setAtualPrim(ref atual, paiAleatorio);
+                atual.removeParedesEntre(vizinhoAleatorio);
+
+                foreach (Celula candidata in setAtualPrim2(ref atual, vizinhoAleatorio)) {
+                    if (!vizinhosNaoVisitados.Contains(candidata)) {
+                        vizinhosNaoVisitados.Add(candidata);
+                    }
+                }
+                if (!instantaneo)
+                    yield return new WaitForSeconds(velocidade);
+            }
+            vizinhosNaoVisitados.Remove(vizinhoAleatorio);
+            c++;
+
+        }
+        Transform fundo = atual.gameObject.transform.GetChild(1);
+        fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
+
+
+        btnPausa.interactable = false;
+        btnLimpa.interactable = true;
+        yield return null;
+    }
+}
+
+

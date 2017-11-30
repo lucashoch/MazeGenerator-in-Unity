@@ -67,6 +67,43 @@ internal class Celula {
 
     }
 
+    public Celula vizinhoDireito() {
+        int direcao;
+        foreach (Celula v in vizinhos) {
+            direcao = id - v.id;
+            if (direcao == -1)
+                return v;
+        }
+        return null;
+    }
+    public Celula vizinhoEsquerdo() {
+        int direcao;
+        foreach (Celula v in vizinhos) {
+            direcao = id - v.id;
+            if (direcao == 1)
+                return v;
+        }
+        return null;
+    }
+    public Celula vizinhoAcima() {
+        int direcao;
+        foreach (Celula v in vizinhos) {
+            direcao = id - v.id;
+            if (direcao > 3)
+                return v;
+        }
+        return null;
+    }
+    public Celula vizinhoAbaixo() {
+        int direcao;
+        foreach (Celula v in vizinhos) {
+            direcao = id - v.id;
+            if (direcao < -3)
+                return v;
+        }
+        return null;
+    }
+
     public List<Celula> getVizinhosVisitados() {
         List<Celula> ret = new List<Celula>();
         foreach (Celula v in vizinhos) {

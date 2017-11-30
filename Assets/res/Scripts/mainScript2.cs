@@ -27,6 +27,7 @@ public class mainScript2 : MonoBehaviour {
     List<Celula> matriz;
 
     Celula raiz;
+    System.Random r;
 
     public void setAltura(int v) {
         altura = v;
@@ -58,10 +59,13 @@ public class mainScript2 : MonoBehaviour {
             case 1:
                 StartCoroutine("GeraPorPrim");
                 break;
+            case 2:
+                StartCoroutine("PreparaDivisaoEConquista", true);
+                break;
             default:
                 break;
         }
-        
+
     }
 
     public void PausaGeraMaze(int t) {
@@ -71,6 +75,9 @@ public class mainScript2 : MonoBehaviour {
                 break;
             case 1:
                 StopCoroutine("GeraPorPrim");
+                break;
+            case 2:
+                StopAllCoroutines();
                 break;
             default:
                 break;
@@ -92,6 +99,7 @@ public class mainScript2 : MonoBehaviour {
         btnPausa = GameObject.Find("BtnPausa").GetComponent<Button>();
         btnLimpa = GameObject.Find("BtnLimpa").GetComponent<Button>();
         gridBase = GameObject.Find("GridBase");
+        r = new System.Random();
 
 
 
@@ -219,8 +227,8 @@ public class mainScript2 : MonoBehaviour {
         raiz.visitada = true;
 
         Celula atual = raiz;
-        int c = 0;
-        System.Random r = new System.Random();
+
+        //System.Random r = new System.Random();
 
         setAtualDesceDFS(ref atual, raiz);
         while (atual.pai != null || atual.TemVizinhosNaoVisitados()) {
@@ -243,7 +251,6 @@ public class mainScript2 : MonoBehaviour {
             if (!instantaneo)
                 yield return new WaitForSeconds(velocidade);
 
-            c++;
         }
 
 
@@ -256,30 +263,7 @@ public class mainScript2 : MonoBehaviour {
         yield return null;
     }
 
-
-    List<Parede> setAtualPrim(ref Celula atual, Celula antiga) {
-        Transform c = atual.gameObject.transform.GetChild(1);
-        c.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
-
-
-        atual = antiga;
-
-        atual.visitada = true;
-
-
-        c = atual.gameObject.transform.GetChild(1);
-        c.gameObject.GetComponent<MeshRenderer>().material.color = Color.red;
-
-        List<Parede> ret = new List<Parede>();
-        foreach (Parede p in atual.paredes) {
-            if (p.vizinho != null)
-                ret.Add(p);
-        }
-        return ret;
-
-    }
-
-    List<Celula> setAtualPrim2(ref Celula atual, Celula antiga) {
+    List<Celula> setAtualPrim(ref Celula atual, Celula antiga) {
         Transform c = atual.gameObject.transform.GetChild(1);
         c.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
 
@@ -295,69 +279,7 @@ public class mainScript2 : MonoBehaviour {
         return atual.vizinhos;
 
     }
-    /*
-    IEnumerator GeraPorPrim() {
-        /*
-            Start with a grid full of walls.
-            Pick a cell, mark it as part of the maze. Add the walls of the cell to the wall list.
-            While there are walls in the list:
-                Pick a random wall from the list. If only one of the two cells that the wall divides is visited, then:
-                    Make the wall a passage and mark the unvisited cell as part of the maze.
-                    Add the neighboring walls of the cell to the wall list.
-                Remove the wall from the list.
-         */
-    /*
 
-   List<Parede> paredesNaoVisitadas = new List<Parede>();
-   Celula atual = raiz;
-
-   paredesNaoVisitadas.AddRange(setAtualPrim(ref atual, raiz));
-
-   System.Random r = new System.Random();
-   int c = 0;
-   //while (c < 200) {
-   while (paredesNaoVisitadas.Count > 0) {
-       Parede paredeAleatoria = paredesNaoVisitadas[r.Next(paredesNaoVisitadas.Count)];
-       bool condicao;
-       condicao = paredeAleatoria.pai.visitada && !paredeAleatoria.vizinho.visitada;
-       condicao |= !paredeAleatoria.pai.visitada && paredeAleatoria.vizinho.visitada;
-       if (condicao) {
-
-           Celula visitado;
-           Celula naoVisitado;
-           if (paredeAleatoria.pai.visitada) {
-               visitado = paredeAleatoria.pai;
-               naoVisitado = paredeAleatoria.vizinho;
-           } else {
-               visitado = paredeAleatoria.vizinho;
-               naoVisitado = paredeAleatoria.pai;
-               print("FOI O VIZINHO COM O CASTIÇAL");
-           }
-
-           setAtualPrim(ref atual, visitado);
-           atual.removeParedesEntre(naoVisitado);                
-
-           foreach(Parede candidata in setAtualPrim(ref atual, naoVisitado)) {
-               if (!paredesNaoVisitadas.Contains(candidata)) {
-                   paredesNaoVisitadas.Add(candidata);
-               }
-           }
-           if (!instantaneo)
-               yield return new WaitForSeconds(velocidade);
-       }
-       paredesNaoVisitadas.Remove(paredeAleatoria);
-       c++;
-
-   }
-   Transform fundo = atual.gameObject.transform.GetChild(1);
-   fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
-
-
-   btnPausa.interactable = false;
-   btnLimpa.interactable = true;
-   yield return null;
-}
-*/
     IEnumerator GeraPorPrim() {
         /*
             Start with a grid full of walls.
@@ -375,11 +297,16 @@ public class mainScript2 : MonoBehaviour {
         List<Celula> vizinhosNaoVisitados = new List<Celula>();
         Celula atual = raiz;
 
-        vizinhosNaoVisitados.AddRange(setAtualPrim2(ref atual, raiz));
+        vizinhosNaoVisitados.AddRange(setAtualPrim(ref atual, raiz));
+        foreach (Celula v in vizinhosNaoVisitados) {
+            Transform fundoVizinho = v.gameObject.transform.GetChild(1);
+            fundoVizinho.gameObject.GetComponent<MeshRenderer>().material.color = Color.cyan;
+        }
+        if (!instantaneo)
+            yield return new WaitForSeconds(velocidade);
 
-        System.Random r = new System.Random();
-        int c = 0;
-        //while (c < 50) {
+        //System.Random r = new System.Random();
+
         while (vizinhosNaoVisitados.Count > 0) {
             Celula vizinhoAleatorio = vizinhosNaoVisitados[r.Next(vizinhosNaoVisitados.Count)];
 
@@ -398,17 +325,19 @@ public class mainScript2 : MonoBehaviour {
                 setAtualPrim(ref atual, paiAleatorio);
                 atual.removeParedesEntre(vizinhoAleatorio);
 
-                foreach (Celula candidata in setAtualPrim2(ref atual, vizinhoAleatorio)) {
-                    if (!vizinhosNaoVisitados.Contains(candidata)) {
+                foreach (Celula candidata in setAtualPrim(ref atual, vizinhoAleatorio)) {
+                    if (!vizinhosNaoVisitados.Contains(candidata) && !candidata.visitada) {
+                        Transform fundoVizinho = candidata.gameObject.transform.GetChild(1);
+                        fundoVizinho.gameObject.GetComponent<MeshRenderer>().material.color = Color.cyan;
                         vizinhosNaoVisitados.Add(candidata);
                     }
                 }
                 if (!instantaneo)
                     yield return new WaitForSeconds(velocidade);
             }
+            Transform fundoAleatorio = vizinhoAleatorio.gameObject.transform.GetChild(1);
+            fundoAleatorio.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
             vizinhosNaoVisitados.Remove(vizinhoAleatorio);
-            c++;
-
         }
         Transform fundo = atual.gameObject.transform.GetChild(1);
         fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
@@ -418,6 +347,240 @@ public class mainScript2 : MonoBehaviour {
         btnLimpa.interactable = true;
         yield return null;
     }
+
+    IEnumerator PreparaDivisaoEConquista(bool constante) {
+
+        //primeiro pinta as paredes de branco
+        Celula atualPintura = raiz;
+        Celula atualAltura = raiz;
+        while (atualPintura != null) {
+
+            foreach (Parede p in atualPintura.paredes) {
+                if (p.vizinho != null) {
+                    p.gameObject.SetActive(false);
+                }
+            }
+            Celula aux = atualPintura.vizinhoDireito();
+            if (aux == null) {
+                atualPintura = atualAltura.vizinhoAbaixo();
+                atualAltura = atualPintura;
+                //yield return null;
+                continue;
+            }
+            atualPintura = aux;
+        }
+        //fim da pintura das paredes de branco
+        if (constante)
+            yield return StartCoroutine(GeraPorDivisaoEConquistaConstante(raiz, comprimento - 1, altura - 1, false));
+        else
+            ;
+        yield return null;
+    }
+
+    IEnumerator GeraPorDivisaoEConquistaConstante(Celula pivot, int maximoComprimento, int maximoAltura, bool vertical) {
+
+        btnPausa.interactable = true;
+        btnLimpa.interactable = false;
+
+        Transform fundoPivot = pivot.gameObject.transform.GetChild(1);
+        fundoPivot.gameObject.GetComponent<MeshRenderer>().material.color = Color.cyan;
+
+        Celula pivotAux = pivot;
+
+        int novoMaximoComprimento = maximoComprimento;
+        int novoMaximoAltura = maximoAltura;
+
+        //Posicionamento central do pivot
+        if (vertical) { //se o corte for vertical
+                        //if (maximoComprimento > 0) { // se o pivot puder andar pra direita 
+            novoMaximoComprimento = maximoComprimento / 2;
+            for (int i = 1; i <= maximoComprimento / 2; i++) { //anda pra direita até a metade
+                pivotAux = pivotAux.vizinhoDireito();
+            }
+            if (maximoComprimento % 2 == 0 && r.NextDouble() > 0.5) {//se for par, tem que decidir qual faixa do meio
+                novoMaximoComprimento -= 1;
+                pivotAux = pivotAux.vizinhoEsquerdo();
+            }
+
+            for (int j = 0; j <= maximoAltura; j++) {
+                foreach (Parede p in pivotAux.paredes) {
+                    if (p.direcao == 1) {
+                        p.gameObject.SetActive(true);
+                        foreach (Parede p2 in pivotAux.vizinhoDireito().paredes) {
+                            if (p2.direcao == 3) {
+                                p2.gameObject.SetActive(true);
+                                Celula x = pivotAux.vizinhoAbaixo();
+                                if (j == maximoAltura)
+                                    break;
+
+                                Transform fundo = pivotAux.gameObject.transform.GetChild(1);
+                                fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
+
+                                pivotAux = x;
+                                fundo = pivotAux.gameObject.transform.GetChild(1);
+                                fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.red;
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                }
+                yield return new WaitForSeconds(velocidade);
+            }
+
+
+            int abertura = r.Next(0, maximoAltura + 1);
+
+            for (int j = 0; j < maximoAltura; j++) {
+                if (j == abertura)
+                    pivotAux.removeParedesEntre(pivotAux.vizinhoDireito());
+                Transform fundo = pivotAux.gameObject.transform.GetChild(1);
+                fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
+                pivotAux = pivotAux.vizinhoAcima();
+                fundo = pivotAux.gameObject.transform.GetChild(1);
+                fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.red;
+                yield return new WaitForSeconds(velocidade);
+            }
+            if (abertura == maximoAltura)
+                pivotAux.removeParedesEntre(pivotAux.vizinhoDireito());
+
+
+            fundoPivot = pivotAux.gameObject.transform.GetChild(1);
+            fundoPivot.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
+            pivotAux = pivotAux.vizinhoDireito();
+            fundoPivot = pivotAux.gameObject.transform.GetChild(1);
+            fundoPivot.gameObject.GetComponent<MeshRenderer>().material.color = Color.cyan;
+            if (maximoComprimento > 0) {
+                int par1;
+                int par2;
+                int par3;
+                int par4;
+
+                if (maximoComprimento % 2 != 0) {//se for ímpar,manda recursivo simplesmente pela metade
+                    print(novoMaximoComprimento + " " + novoMaximoAltura + "\n" + novoMaximoComprimento + " " + novoMaximoAltura);
+                    par1 = novoMaximoComprimento;
+                    par2 = novoMaximoAltura;
+                    par3 = novoMaximoComprimento;
+                    par4 = novoMaximoAltura;
+                } else { // se for par, ver se ele foi pra esquerda
+                    if (novoMaximoComprimento == maximoComprimento / 2) {
+                        par1 = novoMaximoComprimento;
+                        par2 = novoMaximoAltura;
+                        par3 = novoMaximoComprimento - 1;
+                        par4 = novoMaximoAltura;
+                    } else {
+                        par1 = novoMaximoComprimento;
+                        par2 = novoMaximoAltura;
+                        par3 = novoMaximoComprimento + 1;
+                        par4 = novoMaximoAltura;
+                    }
+                }
+                yield return StartCoroutine(GeraPorDivisaoEConquistaConstante(pivot, par1, par2, !vertical));
+                yield return StartCoroutine(GeraPorDivisaoEConquistaConstante(pivotAux, par3, par4, !vertical));
+            }
+
+            //}
+
+        } else {//se o corte for horizontal
+                //if (maximoAltura > 0) { // se o pivot puder andar pra baixo 
+            novoMaximoAltura = maximoAltura / 2;
+            for (int i = 1; i <= maximoAltura / 2; i++) { //anda pra baixo até a metade
+                pivotAux = pivotAux.vizinhoAbaixo();
+            }
+            if (maximoAltura % 2 == 0 && r.NextDouble() > 0.5) {//se for par, tem que decidir qual faixa do meio
+                pivotAux = pivotAux.vizinhoAcima();
+                novoMaximoAltura -= 1;
+            }
+
+            for (int j = 0; j <= maximoComprimento; j++) {
+                foreach (Parede p in pivotAux.paredes) {
+                    if (p.direcao == 2) {
+                        p.gameObject.SetActive(true);
+                        foreach (Parede p2 in pivotAux.vizinhoAbaixo().paredes) {
+                            if (p2.direcao == 0) {
+                                p2.gameObject.SetActive(true);
+                                Celula x = pivotAux.vizinhoDireito();
+                                if (j == maximoComprimento)
+                                    break;
+
+                                Transform fundo = pivotAux.gameObject.transform.GetChild(1);
+                                fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
+
+                                pivotAux = x;
+                                fundo = pivotAux.gameObject.transform.GetChild(1);
+                                fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.red;
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                }
+                yield return new WaitForSeconds(velocidade);
+            }
+
+
+            int abertura = r.Next(0, maximoComprimento + 1);
+
+            for (int j = 0; j < maximoComprimento; j++) {
+                if (j == abertura)
+                    pivotAux.removeParedesEntre(pivotAux.vizinhoAbaixo());
+                Transform fundo = pivotAux.gameObject.transform.GetChild(1);
+                fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
+                pivotAux = pivotAux.vizinhoEsquerdo();
+                fundo = pivotAux.gameObject.transform.GetChild(1);
+                fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.red;
+                yield return new WaitForSeconds(velocidade);
+            }
+            if (abertura == maximoComprimento)
+                pivotAux.removeParedesEntre(pivotAux.vizinhoAbaixo());
+
+
+            fundoPivot = pivotAux.gameObject.transform.GetChild(1);
+            fundoPivot.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
+            pivotAux = pivotAux.vizinhoAbaixo();
+            fundoPivot = pivotAux.gameObject.transform.GetChild(1);
+            fundoPivot.gameObject.GetComponent<MeshRenderer>().material.color = Color.cyan;
+            if (maximoAltura > 0) {
+                int par1;
+                int par2;
+                int par3;
+                int par4;
+
+                if (maximoAltura % 2 != 0) {//se for ímpar,manda recursivo simplesmente pela metade
+                    par1 = novoMaximoComprimento;
+                    par2 = novoMaximoAltura;
+                    par3 = novoMaximoComprimento;
+                    par4 = novoMaximoAltura;
+                } else { // se for par, ver se ele foi pra esquerda
+                    if (novoMaximoAltura == maximoAltura / 2) {
+                        par1 = novoMaximoComprimento;
+                        par2 = novoMaximoAltura;
+                        par3 = novoMaximoComprimento;
+                        par4 = novoMaximoAltura - 1;
+                    } else {
+                        par1 = novoMaximoComprimento;
+                        par2 = novoMaximoAltura;
+                        par3 = novoMaximoComprimento;
+                        par4 = novoMaximoAltura + 1;
+                    }
+                }
+                yield return StartCoroutine(GeraPorDivisaoEConquistaConstante(pivot, par1, par2, !vertical));
+                yield return StartCoroutine(GeraPorDivisaoEConquistaConstante(pivotAux, par3, par4, !vertical));
+            }
+            //}
+        }
+
+
+        //Termiou
+
+
+        btnPausa.interactable = false;
+        btnLimpa.interactable = true;
+        yield return null;
+    }
+
+
+
 }
 
 

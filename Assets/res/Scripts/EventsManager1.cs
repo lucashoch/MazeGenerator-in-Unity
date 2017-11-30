@@ -6,30 +6,29 @@ using UnityEngine.UI;
 public class EventsManager1 : MonoBehaviour {
 
     int tipoDeGeracao = 0;
-    
 
-	// Use this for initialization
-	void Start () {
-		
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
+
+    // Use this for initialization
+    void Start() {
+
+    }
+
+    // Update is called once per frame
+    void Update() {
+
+    }
 
     public void AlterCompVal(float val) {
         this.GetComponent<Text>().text = val.ToString();
         mainScript2.instance.setComprimento((int)val);
     }
 
-    public void AlterAltVal(float val){
+    public void AlterAltVal(float val) {
         this.GetComponent<Text>().text = val.ToString();
-        mainScript2.instance.setAltura((int) val);
+        mainScript2.instance.setAltura((int)val);
     }
 
-    public void AlterVel(float val)
-    {
+    public void AlterVel(float val) {
         mainScript2.instance.setVel(-val);
     }
 
@@ -38,8 +37,8 @@ public class EventsManager1 : MonoBehaviour {
     }
 
     public void GeraLabirinto() {
-        GameObject.Find("BtnGera").GetComponent<Button>().interactable = false;  
-        mainScript2.instance.IniciaGeraMaze(tipoDeGeracao);            
+        GameObject.Find("BtnGera").GetComponent<Button>().interactable = false;
+        mainScript2.instance.IniciaGeraMaze(tipoDeGeracao);
     }
 
     public void Pausa() {

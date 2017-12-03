@@ -34,6 +34,10 @@ public class EventsManager1 : MonoBehaviour {
 
     public void AlterTipo(int i) {
         tipoDeGeracao = i;
+        if(i == 2 || i == 3)
+            GameObject.Find("TglParalelo").GetComponent<Toggle>().interactable = true;
+        else
+            GameObject.Find("TglParalelo").GetComponent<Toggle>().interactable = false;
     }
 
     public void GeraLabirinto() {
@@ -51,6 +55,10 @@ public class EventsManager1 : MonoBehaviour {
 
     public void ToggleInstantaneo(bool v) {
         mainScript2.instance.setInstantaneo(v);
+    }
+
+    public void AlterParalelo(bool v) {
+        mainScript2.instance.setParalelo(v);
     }
 
     public void Limpa() {

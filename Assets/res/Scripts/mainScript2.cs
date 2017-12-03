@@ -15,6 +15,7 @@ public class mainScript2 : MonoBehaviour {
 
     float velocidade = 0f;
     bool instantaneo = false;
+    bool paralelo = true;
 
     Button btnGera;
     Button btnPausa;
@@ -48,6 +49,9 @@ public class mainScript2 : MonoBehaviour {
     public void setInstantaneo(bool v) {
         instantaneo = v;
     }
+    public void setParalelo(bool v) {
+        paralelo = v;
+    }
     public int getComprimento() {
         return comprimento;
     }
@@ -61,6 +65,9 @@ public class mainScript2 : MonoBehaviour {
                 break;
             case 2:
                 StartCoroutine("PreparaDivisaoEConquista", true);
+                break;
+            case 3:
+                StartCoroutine("PreparaDivisaoEConquista", false);
                 break;
             default:
                 break;
@@ -118,12 +125,6 @@ public class mainScript2 : MonoBehaviour {
         return cel.transform.localPosition;
     }
 
-    public void AtribuiVizinhos() {
-        foreach (Celula c in matriz) {
-            print(c.id);
-        }
-    }
-
     IEnumerator DesenhaGrid() {
         btnGera.interactable = false;
         btnPausa.interactable = false;
@@ -160,8 +161,6 @@ public class mainScript2 : MonoBehaviour {
         raiz = matriz[0];
         matriz = null;
     }
-
-
 
 
     void setAtualDesceDFS(ref Celula atual, Celula antiga) {
@@ -360,11 +359,15 @@ public class mainScript2 : MonoBehaviour {
         if (constante) {
             btnPausa.interactable = true;
             btnLimpa.interactable = false;
-            yield return StartCoroutine(GeraPorDivisaoEConquistaConstante(raiz, comprimento - 1, altura - 1, true));
+            yield return StartCoroutine(GeraPorDivisaoEConquistaConstante(raiz, comprimento - 1, altura - 1, comprimento > altura));
             btnPausa.interactable = false;
             btnLimpa.interactable = true;
         } else {
-            ;
+            btnPausa.interactable = true;
+            btnLimpa.interactable = false;
+            yield return StartCoroutine(GeraPorDivisaoEConquistaVariavel(raiz, comprimento - 1, altura - 1, comprimento > altura));
+            btnPausa.interactable = false;
+            btnLimpa.interactable = true;
         }
     }
 
@@ -376,10 +379,10 @@ public class mainScript2 : MonoBehaviour {
         fundoPivot.gameObject.GetComponent<MeshRenderer>().material.color = Color.cyan;
 
         Celula pivotAux = pivot;
-
+        Transform fundo;
         int novoMaximoComprimento = maximoComprimento;
         int novoMaximoAltura = maximoAltura;
-
+        vertical = maximoComprimento > maximoAltura;
         //Posicionamento central do pivot
         if (vertical) { //se o corte for vertical
             if (maximoComprimento > 0) { // se o pivot puder andar pra direita 
@@ -403,7 +406,7 @@ public class mainScript2 : MonoBehaviour {
                                     if (j == maximoAltura)
                                         break;
 
-                                    Transform fundo = pivotAux.gameObject.transform.GetChild(1);
+                                    fundo = pivotAux.gameObject.transform.GetChild(1);
                                     fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
 
                                     fundo = pivotAux.vizinhoDireito().gameObject.transform.GetChild(1);
@@ -424,11 +427,12 @@ public class mainScript2 : MonoBehaviour {
 
 
                 int abertura = r.Next(0, maximoAltura + 1);
-
+                fundo = pivotAux.vizinhoDireito().gameObject.transform.GetChild(1);
+                fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
                 for (int j = 0; j < maximoAltura; j++) {
                     if (j == abertura)
                         pivotAux.removeParedesEntre(pivotAux.vizinhoDireito());
-                    Transform fundo = pivotAux.gameObject.transform.GetChild(1);
+                    fundo = pivotAux.gameObject.transform.GetChild(1);
                     fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
                     pivotAux = pivotAux.vizinhoAcima();
                     fundo = pivotAux.gameObject.transform.GetChild(1);
@@ -470,8 +474,13 @@ public class mainScript2 : MonoBehaviour {
                         }
                     }
                     if (!instantaneo) {
-                        yield return StartCoroutine(GeraPorDivisaoEConquistaConstante(pivot, par1, par2, !vertical));
-                        yield return StartCoroutine(GeraPorDivisaoEConquistaConstante(pivotAux, par3, par4, !vertical));
+                        if (!paralelo) {
+                            yield return StartCoroutine(GeraPorDivisaoEConquistaConstante(pivot, par1, par2, !vertical));
+                            yield return StartCoroutine(GeraPorDivisaoEConquistaConstante(pivotAux, par3, par4, !vertical));
+                        } else {
+                            StartCoroutine(GeraPorDivisaoEConquistaConstante(pivot, par1, par2, !vertical));
+                            yield return StartCoroutine(GeraPorDivisaoEConquistaConstante(pivotAux, par3, par4, !vertical));
+                        }
                     } else {
                         StartCoroutine(GeraPorDivisaoEConquistaConstante(pivot, par1, par2, !vertical));
                         StartCoroutine(GeraPorDivisaoEConquistaConstante(pivotAux, par3, par4, !vertical));
@@ -506,7 +515,7 @@ public class mainScript2 : MonoBehaviour {
                                         break;
                                     }
 
-                                    Transform fundo = pivotAux.gameObject.transform.GetChild(1);
+                                    fundo = pivotAux.gameObject.transform.GetChild(1);
                                     fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
 
                                     fundo = pivotAux.vizinhoAbaixo().gameObject.transform.GetChild(1);
@@ -527,11 +536,12 @@ public class mainScript2 : MonoBehaviour {
 
 
                 int abertura = r.Next(0, maximoComprimento + 1);
-
+                fundo = pivotAux.vizinhoAbaixo().gameObject.transform.GetChild(1);
+                fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
                 for (int j = 0; j < maximoComprimento; j++) {
                     if (j == abertura)
                         pivotAux.removeParedesEntre(pivotAux.vizinhoAbaixo());
-                    Transform fundo = pivotAux.gameObject.transform.GetChild(1);
+                    fundo = pivotAux.gameObject.transform.GetChild(1);
                     fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
                     pivotAux = pivotAux.vizinhoEsquerdo();
                     fundo = pivotAux.gameObject.transform.GetChild(1);
@@ -573,8 +583,13 @@ public class mainScript2 : MonoBehaviour {
                         }
                     }
                     if (!instantaneo) {
-                        yield return StartCoroutine(GeraPorDivisaoEConquistaConstante(pivot, par1, par2, !vertical));
-                        yield return StartCoroutine(GeraPorDivisaoEConquistaConstante(pivotAux, par3, par4, !vertical));
+                        if (!paralelo) {
+                            yield return StartCoroutine(GeraPorDivisaoEConquistaConstante(pivot, par1, par2, !vertical));
+                            yield return StartCoroutine(GeraPorDivisaoEConquistaConstante(pivotAux, par3, par4, !vertical));
+                        } else {
+                            StartCoroutine(GeraPorDivisaoEConquistaConstante(pivot, par1, par2, !vertical));
+                            yield return StartCoroutine(GeraPorDivisaoEConquistaConstante(pivotAux, par3, par4, !vertical));
+                        }
                     } else {
                         StartCoroutine(GeraPorDivisaoEConquistaConstante(pivot, par1, par2, !vertical));
                         StartCoroutine(GeraPorDivisaoEConquistaConstante(pivotAux, par3, par4, !vertical));
@@ -586,10 +601,208 @@ public class mainScript2 : MonoBehaviour {
             }
         }
 
+        yield return null;
+    }
 
-        //Termiou
+
+    IEnumerator GeraPorDivisaoEConquistaVariavel(Celula pivot, int maximoComprimento, int maximoAltura, bool vertical) {
 
 
+
+        Transform fundoPivot = pivot.gameObject.transform.GetChild(1);
+        fundoPivot.gameObject.GetComponent<MeshRenderer>().material.color = Color.cyan;
+
+        Celula pivotAux = pivot;
+
+        int novoMaximoComprimento = maximoComprimento;
+        int novoMaximoAltura = maximoAltura;
+        vertical = maximoComprimento > maximoAltura;
+        Transform fundo;
+        //Posicionamento central do pivot
+        if (vertical) { //se o corte for vertical
+            if (maximoComprimento > 0) { // se o pivot puder andar pra direita 
+                novoMaximoComprimento = r.Next(maximoComprimento - 1); //escolhe um numero aleatório
+                for (int i = 1; i <= novoMaximoComprimento; i++) { //anda pra direita até o numero aleatorio
+                    pivotAux = pivotAux.vizinhoDireito();
+                }
+
+                for (int j = 0; j <= maximoAltura; j++) {
+                    foreach (Parede p in pivotAux.paredes) {
+                        if (p.direcao == 1) {
+                            p.gameObject.SetActive(true);
+                            foreach (Parede p2 in pivotAux.vizinhoDireito().paredes) {
+                                if (p2.direcao == 3) {
+                                    p2.gameObject.SetActive(true);
+                                    Celula x = pivotAux.vizinhoAbaixo();
+                                    if (j == maximoAltura)
+                                        break;
+
+                                    fundo = pivotAux.gameObject.transform.GetChild(1);
+                                    fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
+
+                                    fundo = pivotAux.vizinhoDireito().gameObject.transform.GetChild(1);
+                                    fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
+
+                                    pivotAux = x;
+                                    fundo = pivotAux.gameObject.transform.GetChild(1);
+                                    fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.red;
+                                    break;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                    if (!instantaneo)
+                        yield return new WaitForSeconds(velocidade);
+                }
+
+
+                int abertura = r.Next(0, maximoAltura + 1);
+                Transform fundox = pivotAux.vizinhoDireito().gameObject.transform.GetChild(1);
+                fundox.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
+
+                for (int j = 0; j < maximoAltura; j++) {
+                    if (j == abertura)
+                        pivotAux.removeParedesEntre(pivotAux.vizinhoDireito());
+                    fundo = pivotAux.gameObject.transform.GetChild(1);
+                    fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
+                    pivotAux = pivotAux.vizinhoAcima();
+                    fundo = pivotAux.gameObject.transform.GetChild(1);
+                    fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.red;
+                    if (!instantaneo)
+                        yield return new WaitForSeconds(velocidade);
+                }
+                if (abertura == maximoAltura)
+                    pivotAux.removeParedesEntre(pivotAux.vizinhoDireito());
+
+
+                fundoPivot = pivotAux.gameObject.transform.GetChild(1);
+                fundoPivot.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
+                pivotAux = pivotAux.vizinhoDireito();
+                fundoPivot = pivotAux.gameObject.transform.GetChild(1);
+                fundoPivot.gameObject.GetComponent<MeshRenderer>().material.color = Color.cyan;
+                if (maximoComprimento > 0) {
+                    int par1;
+                    int par2;
+                    int par3;
+                    int par4;
+
+                    par1 = novoMaximoComprimento;
+                    par2 = maximoAltura;
+                    par3 = maximoComprimento - 1 - novoMaximoComprimento;
+                    par4 = maximoAltura;
+
+                    if (!instantaneo) {
+                        if (!paralelo) {
+                            yield return StartCoroutine(GeraPorDivisaoEConquistaVariavel(pivot, par1, par2, !vertical));
+                            yield return StartCoroutine(GeraPorDivisaoEConquistaVariavel(pivotAux, par3, par4, !vertical));
+                        } else {
+                            StartCoroutine(GeraPorDivisaoEConquistaVariavel(pivot, par1, par2, !vertical));
+                            yield return StartCoroutine(GeraPorDivisaoEConquistaVariavel(pivotAux, par3, par4, !vertical));
+                        }
+                    } else {
+                        StartCoroutine(GeraPorDivisaoEConquistaVariavel(pivot, par1, par2, !vertical));
+                        StartCoroutine(GeraPorDivisaoEConquistaVariavel(pivotAux, par3, par4, !vertical));
+                    }
+                }
+
+            } else {
+                fundoPivot = pivot.gameObject.transform.GetChild(1);
+                fundoPivot.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
+            }
+
+        } else {//se o corte for horizontal
+            if (maximoAltura > 0) { // se o pivot puder andar pra baixo 
+                novoMaximoAltura = r.Next(maximoAltura - 1);
+                for (int i = 1; i <= novoMaximoAltura; i++) { //anda pra baixo até a metade
+                    pivotAux = pivotAux.vizinhoAbaixo();
+                }
+
+                for (int j = 0; j <= maximoComprimento; j++) {
+                    foreach (Parede p in pivotAux.paredes) {
+                        if (p.direcao == 2) {
+                            p.gameObject.SetActive(true);
+                            foreach (Parede p2 in pivotAux.vizinhoAbaixo().paredes) {
+                                if (p2.direcao == 0) {
+                                    p2.gameObject.SetActive(true);
+                                    Celula x = pivotAux.vizinhoDireito();
+                                    if (j == maximoComprimento) {
+                                        break;
+                                    }
+
+                                    fundo = pivotAux.gameObject.transform.GetChild(1);
+                                    fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
+
+                                    fundo = pivotAux.vizinhoAbaixo().gameObject.transform.GetChild(1);
+                                    fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
+
+                                    pivotAux = x;
+                                    fundo = pivotAux.gameObject.transform.GetChild(1);
+                                    fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.red;
+                                    break;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                    if (!instantaneo)
+                        yield return new WaitForSeconds(velocidade);
+                }
+
+
+                int abertura = r.Next(0, maximoComprimento + 1);
+                Transform fundox = pivotAux.vizinhoAbaixo().gameObject.transform.GetChild(1);
+                fundox.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
+                for (int j = 0; j < maximoComprimento; j++) {
+                    if (j == abertura)
+                        pivotAux.removeParedesEntre(pivotAux.vizinhoAbaixo());
+                    fundo = pivotAux.gameObject.transform.GetChild(1);
+                    fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
+                    pivotAux = pivotAux.vizinhoEsquerdo();
+                    fundo = pivotAux.gameObject.transform.GetChild(1);
+                    fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.red;
+                    if (!instantaneo)
+                        yield return new WaitForSeconds(velocidade);
+                }
+                if (abertura == maximoComprimento)
+                    pivotAux.removeParedesEntre(pivotAux.vizinhoAbaixo());
+
+
+                fundoPivot = pivotAux.gameObject.transform.GetChild(1);
+                fundoPivot.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
+                pivotAux = pivotAux.vizinhoAbaixo();
+                fundoPivot = pivotAux.gameObject.transform.GetChild(1);
+                fundoPivot.gameObject.GetComponent<MeshRenderer>().material.color = Color.cyan;
+                if (maximoAltura > 0) {
+                    int par1;
+                    int par2;
+                    int par3;
+                    int par4;
+
+
+                    par1 = maximoComprimento;
+                    par2 = novoMaximoAltura;
+                    par3 = maximoComprimento;
+                    par4 = maximoAltura - 1 - novoMaximoAltura;
+
+                    if (!instantaneo) {
+                        if (!paralelo) {
+                            yield return StartCoroutine(GeraPorDivisaoEConquistaVariavel(pivot, par1, par2, !vertical));
+                            yield return StartCoroutine(GeraPorDivisaoEConquistaVariavel(pivotAux, par3, par4, !vertical));
+                        } else {
+                            StartCoroutine(GeraPorDivisaoEConquistaVariavel(pivot, par1, par2, !vertical));
+                            yield return StartCoroutine(GeraPorDivisaoEConquistaVariavel(pivotAux, par3, par4, !vertical));
+                        }
+                    } else {
+                        StartCoroutine(GeraPorDivisaoEConquistaVariavel(pivot, par1, par2, !vertical));
+                        StartCoroutine(GeraPorDivisaoEConquistaVariavel(pivotAux, par3, par4, !vertical));
+                    }
+                }
+            } else {
+                fundoPivot = pivot.gameObject.transform.GetChild(1);
+                fundoPivot.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
+            }
+        }
 
         yield return null;
     }

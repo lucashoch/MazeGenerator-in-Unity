@@ -16,10 +16,13 @@ public class mainScript2 : MonoBehaviour {
     float velocidade = 0f;
     bool instantaneo = false;
     bool paralelo = true;
+    bool limpo = false;
+    List<int> coroutinesIds = new List<int>();
+    int coroutineId = 0;
 
     Button btnGera;
     Button btnPausa;
-    Button btnLimpa;
+    Button btnResolve;
 
     GameObject gridBase;
 
@@ -28,16 +31,18 @@ public class mainScript2 : MonoBehaviour {
     List<Celula> matriz;
 
     Celula raiz;
+    Celula fim;
+
     System.Random r;
 
     public void setAltura(int v) {
         altura = v;
-        StopCoroutine("DesenhaGrid");
+        StopAllCoroutines();
         StartCoroutine("DesenhaGrid");
     }
     public void setComprimento(int v) {
         comprimento = v;
-        StopCoroutine("DesenhaGrid");
+        StopAllCoroutines();
         StartCoroutine("DesenhaGrid");
     }
     public void setVel(float v) {
@@ -55,26 +60,6 @@ public class mainScript2 : MonoBehaviour {
     public int getComprimento() {
         return comprimento;
     }
-    public void IniciaGeraMaze(int t) {
-        switch (t) {
-            case 0:
-                StartCoroutine("GeraBuscaEmProfundidade");
-                break;
-            case 1:
-                StartCoroutine("GeraPorPrim");
-                break;
-            case 2:
-                StartCoroutine("PreparaDivisaoEConquista", true);
-                break;
-            case 3:
-                StartCoroutine("PreparaDivisaoEConquista", false);
-                break;
-            default:
-                break;
-        }
-
-    }
-
     public void PausaGeraMaze(int t) {
         StopAllCoroutines();
     }
@@ -84,6 +69,59 @@ public class mainScript2 : MonoBehaviour {
         StartCoroutine("DesenhaGrid");
     }
 
+    public void Resolve() {
+        btnResolve.interactable = false;
+        StartCoroutine("ResolvePorAEstrela");
+    }
+    public void IniciaGeraMaze(int i) {
+
+        StopAllCoroutines();
+        StartCoroutine(EnumIniciaGeraMaze(i));
+    }
+    IEnumerator EnumIniciaGeraMaze(int t) {
+
+        if (!limpo) {
+            StopCoroutine("DesenhaGrid");
+            yield return StartCoroutine("DesenhaGrid");
+        }
+        limpo = false;
+        bool variavel = false;
+        switch (t) {
+            case 0:
+                yield return StartCoroutine("GeraBuscaEmProfundidade");
+                break;
+            case 1:
+                yield return StartCoroutine("GeraPorPrim");
+                break;
+            case 2:
+                yield return StartCoroutine("PreparaDivisaoEConquista", true);
+                break;
+            case 3:
+                variavel = true;
+                yield return StartCoroutine("PreparaDivisaoEConquista", false);
+                break;
+            default:
+                break;
+        }
+
+        if (variavel) {
+            while (coroutinesIds.Count > 0)
+                yield return null;
+        }
+
+        yield return StartCoroutine("InicioEFim");
+
+    }
+
+    IEnumerator InicioEFim() {
+        Transform fundo = raiz.gameObject.transform.GetChild(1);
+        fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.green;
+
+        fundo = fim.gameObject.transform.GetChild(1);
+        fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.red;
+        btnResolve.interactable = true;
+        yield return null;
+    }
 
     void Start() {
         instance = this;
@@ -91,7 +129,7 @@ public class mainScript2 : MonoBehaviour {
         comprimento = 20;
         btnGera = GameObject.Find("BtnGera").GetComponent<Button>();
         btnPausa = GameObject.Find("BtnPausa").GetComponent<Button>();
-        btnLimpa = GameObject.Find("BtnLimpa").GetComponent<Button>();
+        btnResolve = GameObject.Find("BtnResolve").GetComponent<Button>();
         gridBase = GameObject.Find("GridBase");
         r = new System.Random();
 
@@ -102,7 +140,6 @@ public class mainScript2 : MonoBehaviour {
 
 
     void Update() {
-
     }
 
 
@@ -126,8 +163,8 @@ public class mainScript2 : MonoBehaviour {
     }
 
     IEnumerator DesenhaGrid() {
-        btnGera.interactable = false;
         btnPausa.interactable = false;
+        btnResolve.interactable = false;
 
         float esp, tam;
         esp = 450f / Mathf.Max(altura, comprimento);
@@ -156,12 +193,13 @@ public class mainScript2 : MonoBehaviour {
             if (i % 3 == 0)
                 yield return null;
         }
-        btnGera.interactable = true;
-        yield return null;
-        raiz = matriz[0];
-        matriz = null;
-    }
 
+        raiz = matriz[0];
+        fim = matriz[altura * comprimento - 1];
+        matriz = null;
+        limpo = true;
+        yield return null;
+    }
 
     void setAtualDesceDFS(ref Celula atual, Celula antiga) {
         Transform c = atual.gameObject.transform.GetChild(1);
@@ -191,7 +229,6 @@ public class mainScript2 : MonoBehaviour {
         c.gameObject.GetComponent<MeshRenderer>().material.color = Color.red;
     }
 
-
     IEnumerator GeraBuscaEmProfundidade() {
 
         /*
@@ -208,7 +245,7 @@ public class mainScript2 : MonoBehaviour {
         */
 
         btnPausa.interactable = true;
-        btnLimpa.interactable = false;
+        //btnLimpa.interactable = false;
 
         raiz.visitada = true;
 
@@ -245,7 +282,7 @@ public class mainScript2 : MonoBehaviour {
 
 
         btnPausa.interactable = false;
-        btnLimpa.interactable = true;
+        //btnLimpa.interactable = true;
         yield return null;
     }
 
@@ -278,7 +315,7 @@ public class mainScript2 : MonoBehaviour {
          */
 
         btnPausa.interactable = true;
-        btnLimpa.interactable = false;
+        // btnLimpa.interactable = false;
 
         List<Celula> vizinhosNaoVisitados = new List<Celula>();
         Celula atual = raiz;
@@ -308,12 +345,19 @@ public class mainScript2 : MonoBehaviour {
 
                 Celula paiAleatorio = visitados[r.Next(visitados.Count)];
 
+                Transform fundoVizinho = paiAleatorio.gameObject.transform.GetChild(1);
+                fundoVizinho.gameObject.GetComponent<MeshRenderer>().material.color = Color.red;
+                if (!instantaneo)
+                    yield return new WaitForSeconds(velocidade);
+                fundoVizinho = paiAleatorio.gameObject.transform.GetChild(1);
+                fundoVizinho.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
+
                 setAtualPrim(ref atual, paiAleatorio);
                 atual.removeParedesEntre(vizinhoAleatorio);
 
                 foreach (Celula candidata in setAtualPrim(ref atual, vizinhoAleatorio)) {
                     if (!vizinhosNaoVisitados.Contains(candidata) && !candidata.visitada) {
-                        Transform fundoVizinho = candidata.gameObject.transform.GetChild(1);
+                        fundoVizinho = candidata.gameObject.transform.GetChild(1);
                         fundoVizinho.gameObject.GetComponent<MeshRenderer>().material.color = Color.cyan;
                         vizinhosNaoVisitados.Add(candidata);
                     }
@@ -328,9 +372,8 @@ public class mainScript2 : MonoBehaviour {
         Transform fundo = atual.gameObject.transform.GetChild(1);
         fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
 
-
         btnPausa.interactable = false;
-        btnLimpa.interactable = true;
+        //btnLimpa.interactable = true;
         yield return null;
     }
 
@@ -358,22 +401,22 @@ public class mainScript2 : MonoBehaviour {
         //fim da pintura das paredes de branco
         if (constante) {
             btnPausa.interactable = true;
-            btnLimpa.interactable = false;
             yield return StartCoroutine(GeraPorDivisaoEConquistaConstante(raiz, comprimento - 1, altura - 1, comprimento > altura));
             btnPausa.interactable = false;
-            btnLimpa.interactable = true;
         } else {
             btnPausa.interactable = true;
-            btnLimpa.interactable = false;
+            coroutinesIds = new List<int>();
+            coroutineId = 0;
             yield return StartCoroutine(GeraPorDivisaoEConquistaVariavel(raiz, comprimento - 1, altura - 1, comprimento > altura));
             btnPausa.interactable = false;
-            btnLimpa.interactable = true;
         }
+        yield return null;
     }
 
     IEnumerator GeraPorDivisaoEConquistaConstante(Celula pivot, int maximoComprimento, int maximoAltura, bool vertical) {
 
-
+        int myId = coroutineId++;
+        coroutinesIds.Add(myId);
 
         Transform fundoPivot = pivot.gameObject.transform.GetChild(1);
         fundoPivot.gameObject.GetComponent<MeshRenderer>().material.color = Color.cyan;
@@ -601,13 +644,15 @@ public class mainScript2 : MonoBehaviour {
             }
         }
 
+
+        coroutinesIds.Remove(myId);
         yield return null;
     }
 
-
     IEnumerator GeraPorDivisaoEConquistaVariavel(Celula pivot, int maximoComprimento, int maximoAltura, bool vertical) {
 
-
+        int myId = coroutineId++;
+        coroutinesIds.Add(myId);
 
         Transform fundoPivot = pivot.gameObject.transform.GetChild(1);
         fundoPivot.gameObject.GetComponent<MeshRenderer>().material.color = Color.cyan;
@@ -801,13 +846,79 @@ public class mainScript2 : MonoBehaviour {
             } else {
                 fundoPivot = pivot.gameObject.transform.GetChild(1);
                 fundoPivot.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
+                yield return null;
             }
         }
+
+        coroutinesIds.Remove(myId);
 
         yield return null;
     }
 
+    IEnumerator ResolvePorAEstrela() {
 
+        List<Celula> fila = new List<Celula>();
+        List<Celula> visitados = new List<Celula>();
+
+        Celula atual = raiz;
+        Transform fundo = atual.gameObject.transform.GetChild(1);
+        fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.blue;
+
+        atual.GScore = 0;
+        atual.HScore = (int)((atual.gameObject.transform.position - fim.gameObject.transform.position).magnitude * 1000);
+        atual.FScore = atual.HScore;
+
+
+        while (atual != fim) {// && c<15) {
+            List<Celula> filhos = atual.getFilhos();
+            print(string.Format("atual: {0} H: {1} G: {2} F: {3}", atual.id, atual.HScore, atual.GScore, atual.FScore));
+
+            foreach (Celula v in filhos) {
+
+
+                v.HScore = (int)((v.gameObject.transform.position - fim.gameObject.transform.position).magnitude * 1000);
+
+
+                v.GScore = v.pai.GScore + 10;
+                v.FScore = v.GScore + v.HScore;
+
+                fila.Add(v);
+
+                fundo = v.gameObject.transform.GetChild(1);
+                fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.gray;
+
+                
+
+
+            }
+            yield return new WaitForSeconds(velocidade); ;
+
+            fila.Sort((x, y) => x.FScore.CompareTo(y.FScore));
+            
+            atual = fila[0];
+            visitados.Add(atual);
+            fila.Remove(atual);
+
+
+
+            fundo = atual.gameObject.transform.GetChild(1);
+            fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.blue;
+            yield return new WaitForSeconds(velocidade);
+        }
+
+        //achou o caminho
+        atual = fim;
+        while (atual.pai != null) {
+            atual = atual.pai;
+            fundo = atual.gameObject.transform.GetChild(1);
+            fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.green;
+            
+            yield return new WaitForSeconds(velocidade);
+        }
+
+        btnGera.interactable = true;
+        yield return null;
+    }
 
 }
 

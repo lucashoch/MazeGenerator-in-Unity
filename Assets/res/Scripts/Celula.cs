@@ -11,6 +11,9 @@ internal class Celula {
     public List<Parede> paredes { get; }
     public Celula pai;
     public List<Celula> filhos { get; }
+    public int GScore;
+    public int HScore;
+    public int FScore;
 
     public Celula(int id, GameObject g) {
         this.id = id;
@@ -25,6 +28,9 @@ internal class Celula {
             Parede p = new Parede(child.gameObject, this);
             paredes.Add(p);
         }
+
+        HScore = 0;
+        GScore = -1;
     }
 
     public void addVizinho(Celula vizinho) {
@@ -47,6 +53,29 @@ internal class Celula {
                 }
             }
         }
+    }
+
+    public List<Celula> getFilhos() {
+
+        if (filhos.Count == 0) {
+            List<Celula> ret = new List<Celula>(vizinhos);
+
+            foreach (Parede p in paredes) {
+                foreach (Celula v in vizinhos) {
+                    if (getDirecaoVizinho(v) == p.direcao)
+                        ret.Remove(v);
+                }
+            }
+
+            foreach (Celula f in ret) {
+                if (pai != f) {
+                    f.pai = this;
+                    filhos.Add(f);
+                }
+            }
+        }
+
+        return filhos;
     }
 
     public int getDirecaoVizinho(Celula v) { //0: cima, 1: direita, 2: baixo, 3: esquerda

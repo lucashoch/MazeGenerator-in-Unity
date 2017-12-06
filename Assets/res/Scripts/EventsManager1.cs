@@ -41,16 +41,19 @@ public class EventsManager1 : MonoBehaviour {
     }
 
     public void GeraLabirinto() {
-        GameObject.Find("BtnGera").GetComponent<Button>().interactable = false;
         mainScript2.instance.IniciaGeraMaze(tipoDeGeracao);
     }
 
     public void Pausa() {
         GameObject.Find("BtnPausa").GetComponent<Button>().interactable = false;
-        GameObject.Find("BtnLimpa").GetComponent<Button>().interactable = true;
-        GameObject.Find("BtnGera").GetComponent<Button>().interactable = false;
+        //GameObject.Find("BtnLimpa").GetComponent<Button>().interactable = true;
         mainScript2.instance.PausaGeraMaze(tipoDeGeracao);
 
+    }
+
+    public void Resolve() {
+        this.GetComponent<Button>().interactable = false;
+        mainScript2.instance.Resolve();
     }
 
     public void ToggleInstantaneo(bool v) {

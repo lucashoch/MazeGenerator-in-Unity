@@ -869,7 +869,7 @@ public class mainScript2 : MonoBehaviour {
         atual.FScore = atual.HScore;
 
 
-        while (atual != fim) {// && c<15) {
+        while (true) {// && c<15) {
             List<Celula> filhos = atual.getFilhos();
             print(string.Format("atual: {0} H: {1} G: {2} F: {3}", atual.id, atual.HScore, atual.GScore, atual.FScore));
 
@@ -891,7 +891,8 @@ public class mainScript2 : MonoBehaviour {
 
 
             }
-            yield return new WaitForSeconds(velocidade); ;
+            if(!instantaneo)
+                yield return new WaitForSeconds(velocidade); ;
 
             fila.Sort((x, y) => x.FScore.CompareTo(y.FScore));
             
@@ -900,10 +901,15 @@ public class mainScript2 : MonoBehaviour {
             fila.Remove(atual);
 
 
-
+            if (atual == fim) {
+                fundo = fim.gameObject.transform.GetChild(1);
+                fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.red;
+                break;
+            }
             fundo = atual.gameObject.transform.GetChild(1);
             fundo.gameObject.GetComponent<MeshRenderer>().material.color = Color.blue;
-            yield return new WaitForSeconds(velocidade);
+            if (!instantaneo)
+                yield return new WaitForSeconds(velocidade);
         }
 
         //achou o caminho
